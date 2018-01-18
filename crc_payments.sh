@@ -26,6 +26,13 @@ fi
 MASTERNODE_PUB_KEY="CPgpU3Gc92qVcjTRFLbseEkrwXDdu8XDmg"
 
 # The following are the public addresses of the seat holders (adjust these as needed)
+SEAT1="CLckwpm4wSqePxBVXyKbY8xVaHQmC1sQLn" # hokie_programmer - 50%
+SEAT2="" # Ryan - pool.CryptoPros.us - 30%
+SEAT3="" #  - 10%
+SEAT4="" #  - 10%
+
+# Service Fee
+FEE="0.02"
 
 if $HAS_DEPENDENCIES ; then
     echo "Getting rewards due..."
@@ -47,6 +54,23 @@ if $HAS_DEPENDENCIES ; then
     TOTAL_DUE=$(cat latest_payments.txt | xargs | sed -e 's/\ /+/g' | bc)
 
     echo -e "Total Due: $TOTAL_DUE\n"
+
+    printf "Service fee (for Ryan - pool.CryptoPros.us): "
+    SERVICE_FEE=$(echo "scale=100000; $TOTAL_DUE*$FEE" | bc -l)
+    echo $SERVICE_FEE
+
+    REMAINING_TOTAL=$(echo "scale=100000; $TOTAL_DUE-$SERVICE_FEE" | bc -l)
+    echo -e "Remaining balance after fee: $REMAINING_TOTAL\n"
+
+    SEAT1_DUE=$(echo "scale=100000; $REMAINING_TOTAL*.5" | bc -l)
+    SEAT2_DUE=$(echo "scale=100000; $REMAINING_TOTAL*.3+$SERVICE_FEE" | bc -l)
+    SEAT3_DUE=$(echo "scale=100000; $REMAINING_TOTAL*.1" | bc -l)
+    SEAT4_DUE=$(echo "scale=100000; $REMAINING_TOTAL*.1" | bc -l)
+
+    echo "hokie_programmer: $SEAT1_DUE"
+    echo "Ryan - pool.CryptoPros.us: $SEAT2_DUE"
+    echo "?: $SEAT3_DUE"
+    echo "?: $SEAT4_DUE"
 
     echo -e "Cleaning up..."
     rm latest_payments.txt
