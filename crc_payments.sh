@@ -28,14 +28,20 @@ MASTERNODE_PUB_KEY="CPgpU3Gc92qVcjTRFLbseEkrwXDdu8XDmg"
 # The following are the public addresses of the seat holders (adjust these as needed)
 SEAT1="CLckwpm4wSqePxBVXyKbY8xVaHQmC1sQLn" # hokie_programmer - 50%
 SEAT2="" # Ryan - pool.CryptoPros.us - 30%
-SEAT3="" #  - 10%
-SEAT4="" #  - 10%
+SEAT3="CSrMvTSERZDhgHuitvDMdD7TgEBFviuq6b" # MaxG - 10%
+SEAT4="EHwpXvfmoG5xBkqUXBXQi7CWZDTzgawhv2" # J B - 10%
 
 # Service Fee
 FEE="0.02"
 
 if $HAS_DEPENDENCIES ; then
     echo "Getting rewards due..."
+
+    # Balance of masternode address
+    MN_BALANCE=$(curl http://explorer.cryptopros.us/ext/getbalance/CPgpU3Gc92qVcjTRFLbseEkrwXDdu8XDmg)
+    WALLET_TOTAL=$(crowdcoin-cli listaddressgroupings | grep -Eo "[0-9]+\.[0-9]+" | xargs | sed -e 's/\ /+/g' | bc)
+    MISC_ADDRESS_BALANCE=$(echo "scale=100000; $WALLET_TOTAL-$MN_BALANCE" | bc -l)
+
     # Set LAST_SENT_TX to the most recent outgoing transaction
     LAST_SENT_TX=$(curl -s http://crowdcoin.site:3001/ext/getaddress/${MASTERNODE_PUB_KEY} \
         | jq -r '[.["last_txs"][] | select(.type | contains("vin"))][-1].addresses')
@@ -51,6 +57,7 @@ if $HAS_DEPENDENCIES ; then
             | jq --arg MASTERNODE_PUB_KEY "$MASTERNODE_PUB_KEY" '."vout"[] | select(."scriptPubKey".addresses | contains([$MASTERNODE_PUB_KEY])) | .value' >> latest_payments.txt
     done;
 
+    echo $MISC_ADDRESS_BALANCE >> latest_payments.txt
     TOTAL_DUE=$(cat latest_payments.txt | xargs | sed -e 's/\ /+/g' | bc)
 
     echo -e "Total Due: $TOTAL_DUE\n"
@@ -68,9 +75,9 @@ if $HAS_DEPENDENCIES ; then
     SEAT4_DUE=$(echo "scale=100000; $REMAINING_TOTAL*.1" | bc -l)
 
     echo "hokie_programmer: $SEAT1_DUE"
-    echo "Ryan - pool.CryptoPros.us: $SEAT2_DUE"
-    echo "?: $SEAT3_DUE"
-    echo "?: $SEAT4_DUE"
+    echo "Ryan - pool.CryptoPros.us (includes service fee): $SEAT2_DUE"
+    echo "MaxG: $SEAT3_DUE"
+    echo "J B: $SEAT4_DUE"
 
     echo -e "Cleaning up..."
     rm latest_payments.txt
