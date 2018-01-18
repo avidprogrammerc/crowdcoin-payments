@@ -3,13 +3,21 @@
 # This script is intended to be used to automatically send payments to crowdcoin masternode share holders.
 # Edit the script variables to suit your needs.
 
+echo -e "##############################################"
+echo -e "#                                            #"
+echo -e "#        Automatic Crowdcoin Payments        #"
+echo -e "#                                            #"
+echo -e "##############################################\n"
+
 # Check for dependencies.
 HAS_DEPENDENCIES=true
 
 echo "Checking for dependencies..."
 if ! which jq > /dev/null; then
-    echo "jq is not installed..."
+    echo -e "jq is not installed...\n"
     HAS_DEPENDENCIES=false
+else
+    echo -e "✔\n"
 fi
 
 
@@ -20,12 +28,6 @@ MASTERNODE_PUB_KEY="CPgpU3Gc92qVcjTRFLbseEkrwXDdu8XDmg"
 # The following are the public addresses of the seat holders (adjust these as needed)
 
 if $HAS_DEPENDENCIES ; then
-    echo "#####################################################"
-    echo "#                                                   #"
-    echo "#        Paying Crowdcoin Masternode Holders        #"
-    echo "#                                                   #"
-    echo "#####################################################"
-    echo ""
     echo "Getting rewards due..."
     # Set LAST_SENT_TX to the most recent outgoing transaction
     LAST_SENT_TX=$(curl -s http://crowdcoin.site:3001/ext/getaddress/${MASTERNODE_PUB_KEY} \
@@ -44,8 +46,8 @@ if $HAS_DEPENDENCIES ; then
 
     TOTAL_DUE=$(cat latest_payments.txt | xargs | sed -e 's/\ /+/g' | bc)
 
-    echo "Total Due: $TOTAL_DUE"
+    echo -e "Total Due: $TOTAL_DUE\n"
 
-    echo "Cleaning up..."
+    echo -e "Cleaning up..."
     rm latest_payments.txt
 fi
